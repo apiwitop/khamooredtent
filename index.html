@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>ระบบ POS ร้านค้า</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        
+        .store-status {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        .store-status.open {
+            background: #10b981;
+            animation: pulse 2s infinite;
+        }
+        
+        .store-status.closed {
+            background: #ef4444;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 15px;
+            background: none;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            color: #6c757d;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .content {
+            padding: 20px;
+            min-height: 400px;
+        }
+        
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .store-closed-overlay {
+            text-align: center;
+            padding: 60px 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+        
+        .store-closed-overlay h2 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        
+        .store-closed-overlay p {
+            font-size: 18px;
+            color: #6c757d;
+            margin-bottom: 30px;
+        }
+        
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .product-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .product-card:active {
+            transform: scale(0.95);
+        }
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.5);
+        }
+        
+        .product-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .product-price {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .cart {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .cart-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .cart-item-info {
+            flex: 1;
+        }
+        
+        .cart-item-name {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        
+        .cart-item-price {
+            color: #667eea;
+            font-size: 14px;
+        }
+        
+        .cart-item-qty {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .qty-btn {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: none;
+            background: #667eea;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .qty-btn:active {
+            transform: scale(0.9);
+        }
+        
+        .qty-display {
+            font-size: 18px;
+            font-weight: bold;
+            min-width: 30px;
+            text-align: center;
+        }
+        
+        .total-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        
+        .total-amount {
+            font-size: 32px;
+            font-weight: bold;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .input-group input, .input-group textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        
+        .input-group input:focus, .input-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .change-display {
+            background: #d4edda;
+            color: #155724;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+        }
+        
+        .btn:active {
+            transform: scale(0.98);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+            color: white;
+            box-shadow: 0 5px 15px rgba(86, 171, 47, 0.4);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+            color: white;
+            box-shadow: 0 5px 15px rgba(235, 51, 73, 0.4);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #f2994a 0%, #f2c94c 100%);
+            color: white;
+            box-shadow: 0 5px 15px rgba(242, 153, 74, 0.4);
+        }
+        
+        .manage-product {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .manage-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .manage-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .manage-price {
+            font-size: 24px;
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .manage-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-small {
+            padding: 10px 20px;
+            font-size: 14px;
+            border-radius: 8px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .settings-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .settings-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .webhook-method {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .webhook-method button {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .webhook-method button.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛒 ระบบ POS ร้านค้า</h1>
+            <div id="storeName">ร้านค้าของพ่อ</div>
+            <div class="store-status" id="storeStatus">ปิดร้าน</div>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('pos')">ขายสินค้า</button>
+            <button class="tab" onclick="switchTab('manage')">จัดการสินค้า</button>
+            <button class="tab" onclick="switchTab('settings')">ตั้งค่า</button>
+        </div>
+        
+        <div class="content">
+            <!-- หน้าขายสินค้า -->
+            <div id="pos-page" class="page active">
+                <div id="store-closed-message" class="store-closed-overlay">
+                    <h2>🔒</h2>
+                    <p>ร้านปิดอยู่</p>
+                    <button class="btn btn-success" onclick="openStore()">🔓 เปิดร้าน</button>
+                </div>
+
+                <div id="store-open-content" style="display: none;">
+                    <div id="products-container" class="products-grid"></div>
+                    
+                    <div class="cart">
+                        <div class="cart-title">🛒 รายการสินค้า</div>
+                        <div id="cart-items"></div>
+                    </div>
+                    
+                    <div class="total-section">
+                        <div class="total-row">
+                            <span>ยอดรวม:</span>
+                            <span class="total-amount" id="total-display">0 ฿</span>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>💵 รับเงิน (บาท)</label>
+                        <input type="number" id="received-input" placeholder="0" inputmode="decimal">
+                    </div>
+                    
+                    <div id="change-section" style="display: none;">
+                        <div class="change-display">
+                            <div>💰 เงินทอน</div>
+                            <div id="change-display">0 ฿</div>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-success" onclick="completeSale()">✅ ชำระเงิน</button>
+                    <button class="btn btn-warning" onclick="clearCart()">🗑️ ล้างรายการ</button>
+                    <button class="btn btn-danger" onclick="closeStore()">🔒 ปิดร้าน / สรุปยอด</button>
+                </div>
+            </div>
+            
+            <!-- หน้าจัดการสินค้า -->
+            <div id="manage-page" class="page">
+                <button class="btn btn-primary" onclick="showAddProductModal()">➕ เพิ่มสินค้าใหม่</button>
+                <div id="manage-products-container"></div>
+            </div>
+            
+            <!-- หน้าตั้งค่า -->
+            <div id="settings-page" class="page">
+                <div class="settings-section">
+                    <div class="settings-title">ชื่อร้านค้า</div>
+                    <div class="input-group">
+                        <input type="text" id="store-name-input" placeholder="ชื่อร้านค้า">
+                    </div>
+                    <button class="btn btn-primary" onclick="saveStoreName()">💾 บันทึกชื่อร้าน</button>
+                </div>
+                
+                <div class="settings-section">
+                    <div class="settings-title">📱 การแจ้งเตือนผ่าน LINE</div>
+                    
+                    <div class="alert alert-warning">
+                        ⚠️ <strong>LINE Notify ถูกยกเลิกแล้ว</strong><br>
+                        เลือกวิธีส่งข้อมูลทางอื่น:
+                    </div>
+
+                    <div class="webhook-method">
+                        <button id="method-webhook" class="active" onclick="selectMethod('webhook')">
+                            🌐 Webhook URL
+                        </button>
+                        <button id="method-line" onclick="selectMethod('line')">
+                            💬 LINE Bot
+                        </button>
+                    </div>
+
+                    <!-- Webhook URL Method -->
+                    <div id="webhook-section">
+                        <div class="alert alert-info">
+                            💡 <strong>แนะนำ: ใช้ Line Notify Webhook ทางเลือก</strong><br>
+                            1. ไปที่ <a href="https://notify-bot.line.me/th/" target="_blank">notify-bot.line.me</a><br>
+                            2. หรือใช้บริการอื่นๆ เช่น:<br>
+                            - <strong>Make.com</strong> (แนะนำ - ฟรี): สร้าง Webhook → เชื่อมกับ LINE<br>
+                            - <strong>Zapier</strong>: Webhook → LINE<br>
+                            - <strong>IFTTT</strong>: Webhooks → LINE Notify<br>
+                            - <strong>Discord Webhook</strong>: สำหรับส่งไป Discord<br>
+                            3. คัดลอก Webhook URL มาวางด้านล่าง
+                        </div>
+                        <div class="input-group">
+                            <label>Webhook URL</label>
+                            <input type="url" id="webhook-url-input" placeholder="https://hooks.make.com/...">
+                        </div>
+                        <button class="btn btn-primary" onclick="saveWebhook()">💾 บันทึก Webhook</button>
+                        <button class="btn btn-warning" onclick="testWebhook()">🧪 ทดสอบส่งข้อความ</button>
+                    </div>
+
+                    <!-- LINE Bot Method -->
+                    <div id="line-section" style="display: none;">
+                        <div class="alert alert-info">
+                            💬 <strong>ตั้งค่า LINE Messaging API</strong><br>
+                            1. ไป <a href="https://developers.line.biz/console/" target="_blank">LINE Developers Console</a><br>
+                            2. สร้าง Provider และ Channel (Messaging API)<br>
+                            3. คัดลอก Channel Access Token<br>
+                            4. คัดลอก User ID หรือ Group ID (จาก LINE Official Account)
+                        </div>
+                        <div class="input-group">
+                            <label>Channel Access Token</label>
+                            <textarea id="line-token-input" rows="3" placeholder="Channel Access Token ที่ได้จาก LINE Developers"></textarea>
+                        </div>
+                        <div class="input-group">
+                            <label>User ID หรือ Group ID</label>
+                            <input type="text" id="line-target-input" placeholder="Uxxxxx หรือ Cxxxxx">
+                        </div>
+                        <button class="btn btn-primary" onclick="saveLineBot()">💾 บันทึก LINE Bot</button>
+                        <button class="btn btn-warning" onclick="testLineBot()">🧪 ทดสอบส่งข้อความ</button>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <div class="settings-title">📊 ข้อมูลระบบ</div>
+                    <button class="btn btn-danger" onclick="resetAllData()">⚠️ ลบข้อมูลทั้งหมด</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal เพิ่ม/แก้ไขสินค้า -->
+    <div id="product-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header" id="modal-title">เพิ่มสินค้าใหม่</div>
+            <div class="input-group">
+                <label>ชื่อสินค้า</label>
+                <input type="text" id="product-name-input" placeholder="เช่น น้ำดื่ม">
+            </div>
+            <div class="input-group">
+                <label>ราคา (บาท)</label>
+                <input type="number" id="product-price-input" placeholder="0" inputmode="decimal">
+            </div>
+            <button class="btn btn-success" onclick="saveProduct()">💾 บันทึก</button>
+            <button class="btn btn-warning" onclick="closeModal()">❌ ยกเลิก</button>
+        </div>
+    </div>
+
+    <script>
+        let products = [];
+        let cart = [];
+        let dailySales = [];
+        let storeOpen = false;
+        let storeOpenTime = null;
+        let editingProductId = null;
+        let storeName = 'ร้านค้าของพ่อ';
+        
+        // การตั้งค่าการแจ้งเตือน
+        let notificationMethod = 'webhook'; // 'webhook' หรือ 'line'
+        let webhookUrl = '';
+        let lineAccessToken = '';
+        let lineTargetId = '';
+
+        // โหลดข้อมูลเริ่มต้น
+        function loadData() {
+            const savedProducts = localStorage.getItem('pos_products');
+            const savedDailySales = localStorage.getItem('pos_daily_sales');
+            const savedStoreName = localStorage.getItem('pos_store_name');
+            const savedStoreOpen = localStorage.getItem('pos_store_open');
+            const savedStoreOpenTime = localStorage.getItem('pos_store_open_time');
+            const savedNotificationMethod = localStorage.getItem('pos_notification_method');
+            const savedWebhookUrl = localStorage.getItem('pos_webhook_url');
+            const savedLineToken = localStorage.getItem('pos_line_token');
+            const savedLineTarget = localStorage.getItem('pos_line_target');
+            
+            if (savedProducts) products = JSON.parse(savedProducts);
+            if (savedDailySales) dailySales = JSON.parse(savedDailySales);
+            if (savedStoreName) storeName = savedStoreName;
+            if (savedStoreOpen) storeOpen = savedStoreOpen === 'true';
+            if (savedStoreOpenTime) storeOpenTime = savedStoreOpenTime;
+            if (savedNotificationMethod) notificationMethod = savedNotificationMethod;
+            if (savedWebhookUrl) webhookUrl = savedWebhookUrl;
+            if (savedLineToken) lineAccessToken = savedLineToken;
+            if (savedLineTarget) lineTargetId = savedLineTarget;
+            
+            // ถ้าไม่มีสินค้า ให้สร้างตัวอย่าง
+            if (products.length === 0) {
+                products = [
+                    { id: 1, name: 'น้ำดื่ม', price: 10 },
+                    { id: 2, name: 'กาแฟ', price: 25 },
+                    { id: 3, name: 'ขนมปัง', price: 15 },
+                    { id: 4, name: 'ลูกอม', price: 5 }
+                ];
+                saveData();
+            }
+            
+            document.getElementById('store-name-input').value = storeName;
+            document.getElementById('storeName').textContent = storeName;
+            document.getElementById('webhook-url-input').value = webhookUrl;
+            document.getElementById('line-token-input').value = lineAccessToken;
+            document.getElementById('line-target-input').value = lineTargetId;
+            
+            selectMethod(notificationMethod);
+            updateStoreStatus();
+        }
+
+        function saveData() {
+            localStorage.setItem('pos_products', JSON.stringify(products));
+            localStorage.setItem('pos_daily_sales', JSON.stringify(dailySales));
+            localStorage.setItem('pos_store_name', storeName);
+            localStorage.setItem('pos_store_open', storeOpen);
+            localStorage.setItem('pos_store_open_time', storeOpenTime);
+            localStorage.setItem('pos_notification_method', notificationMethod);
+            localStorage.setItem('pos_webhook_url', webhookUrl);
+            localStorage.setItem('pos_line_token', lineAccessToken);
+            localStorage.setItem('pos_line_target', lineTargetId);
+        }
+
+        function updateStoreStatus() {
+            const statusEl = document.getElementById('storeStatus');
+            const closedMsg = document.getElementById('store-closed-message');
+            const openContent = document.getElementById('store-open-content');
+            
+            if (storeOpen) {
+                statusEl.textContent = '✅ เปิดร้าน';
+                statusEl.className = 'store-status open';
+                closedMsg.style.display = 'none';
+                openContent.style.display = 'block';
+            } else {
+                statusEl.textContent = '🔒 ปิดร้าน';
+                statusEl.className = 'store-status closed';
+                closedMsg.style.display = 'block';
+                openContent.style.display = 'none';
+            }
+        }
+
+        function openStore() {
+            storeOpen = true;
+            storeOpenTime = new Date().toISOString();
+            dailySales = [];
+            saveData();
+            updateStoreStatus();
+            renderProducts();
+            renderCart();
+            updateTotal();
+            
+            sendNotification(`🔓 เปิดร้านแล้ว!\n⏰ เวลา: ${new Date().toLocaleString('th-TH')}`);
+        }
+
+        async function closeStore() {
+            if (!storeOpen) {
+                alert('❌ ร้านปิดอยู่แล้ว');
+                return;
+            }
+            
+            if (cart.length > 0) {
+                if (!confirm('⚠️ ยังมีรายการค้างอยู่ในตะกร้า\nต้องการปิดร้านต่อหรือไม่?')) {
+                    return;
+                }
+            }
+            
+            if (!confirm('🔒 ต้องการปิดร้านและสรุปยอดขายหรือไม่?')) return;
+            
+            // สรุปยอดขาย
+            const totalRevenue = dailySales.reduce((sum, sale) => sum + sale.total, 0);
+            const totalTransactions = dailySales.length;
+            
+            const openTime = new Date(storeOpenTime);
+            const closeTime = new Date();
+            const duration = Math.floor((closeTime - openTime) / 1000 / 60);
+            
+            let report = `📊 สรุปยอดขาย - ${storeName}\n`;
+            report += `📅 ${closeTime.toLocaleDateString('th-TH')}\n`;
+            report += `⏰ เปิด: ${openTime.toLocaleTimeString('th-TH')}\n`;
+            report += `⏰ ปิด: ${closeTime.toLocaleTimeString('th-TH')}\n`;
+            report += `⌚ รวม: ${Math.floor(duration/60)} ชม. ${duration%60} นาที\n`;
+            report += `━━━━━━━━━━━━━━\n`;
+            report += `💰 รายได้รวม: ${totalRevenue} ฿\n`;
+            report += `🧾 จำนวนบิล: ${totalTransactions} ใบ\n`;
+            
+            if (totalTransactions > 0) {
+                report += `📈 เฉลี่ยต่อบิล: ${Math.round(totalRevenue / totalTransactions)} ฿\n`;
+                
+                // นับสินค้าขายดี
+                const productCount = {};
+                dailySales.forEach(sale => {
+                    sale.items.forEach(item => {
+                        if (!productCount[item.name]) {
+                            productCount[item.name] = { qty: 0, revenue: 0 };
+                        }
+                        productCount[item.name].qty += item.quantity;
+                        productCount[item.name].revenue += item.price * item.quantity;
+                    });
+                });
+                
+                report += `\n🏆 สินค้าขายดี:\n`;
+                Object.entries(productCount)
+                    .sort((a, b) => b[1].qty - a[1].qty)
+                    .slice(0, 5)
+                    .forEach(([name, data]) => {
+                        report += `• ${name}: ${data.qty} ชิ้น (${data.revenue} ฿)\n`;
+                    });
+            }
+            
+            // บันทึกเป็นไฟล์
+            downloadDailySummary(report, dailySales);
+            
+            // ส่งแจ้งเตือน
+            await sendNotification(report);
+            
+            alert(report);
+            
+            // ล้างข้อมูลและปิดร้าน
+            storeOpen = false;
+            storeOpenTime = null;
+            dailySales = [];
+            cart = [];
+            saveData();
+            updateStoreStatus();
+        }
+
+        function downloadDailySummary(summary, sales) {
+            const date = new Date();
+            const filename = `สรุปยอดขาย_${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}.txt`;
+            
+            let content = summary + '\n\n';
+            content += '━━━━━━━━━━━━━━━━━━━━\n';
+            content += 'รายละเอียดการขายทั้งหมด\n';
+            content += '━━━━━━━━━━━━━━━━━━━━\n\n';
+            
+            sales.forEach((sale, index) => {
+                const time = new Date(sale.timestamp);
+                content += `บิลที่ ${index + 1} - ${time.toLocaleString('th-TH')}\n`;
+                sale.items.forEach(item => {
+                    content += `  ${item.name} x${item.quantity} = ${item.price * item.quantity} ฿\n`;
+                });
+                content += `  ยอดรวม: ${sale.total} ฿\n`;
+                content += `  รับเงิน: ${sale.received} ฿\n`;
+                content += `  เงินทอน: ${sale.change} ฿\n\n`;
+            });
+            
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        async function sendNotification(message) {
+            if (notificationMethod === 'webhook' && webhookUrl) {
+                await sendWebhook(message);
+            } else if (notificationMethod === 'line' && lineAccessToken && lineTargetId) {
+                await sendLineMessage(message);
+            }
+        }
+
+        async function sendWebhook(message) {
+            try {
+                await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        text: message,
+                        content: message,
+                        message: message
+                    })
+                });
+            } catch (e) {
+                console.error('Webhook error:', e);
+            }
+        }
+
+        // async function sendLineMessage(message) {
+        //     try {
+        //         await fetch('https://api.line.me/v2/bot/message/push', {
+        //             method: 'POST',
+        //             headers: {
+        //                 'Content-Type': 'application/json',
+        //                 'Authorization': `Bearer ${lineAccessToken}`
+        //             },
+        //             body: JSON.stringify({
+        //                 to: lineTargetId,
+        //                 messages: [{ type: 'text', text: message }]
+        //             })
+        //         });
+        //     } catch (e) {
+        //         console.error('LINE error:', e);
+        //     }
+        // }
+        async function sendLineMessage(message) {
+            try {
+                await fetch('YOUR_WEB_APP_URL', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        token: lineAccessToken,
+                        target: lineTargetId,
+                        message: message
+                    })
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+
+
+        function renderProducts() {
+            const container = document.getElementById('products-container');
+            if (products.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📦</div><div>ยังไม่มีสินค้า<br>ไปที่ "จัดการสินค้า" เพื่อเพิ่มสินค้า</div></div>';
+                return;
+            }
+            
+            container.innerHTML = products.map(p => `
+                <div class="product-card" onclick="addToCart(${p.id})">
+                    <div class="product-name">${p.name}</div>
+                    <div class="product-price">${p.price} ฿</div>
+                </div>
+            `).join('');
+        }
+
+        function addToCart(productId) {
+            if (!storeOpen) {
+                alert('❌ กรุณาเปิดร้านก่อน');
+                return;
+            }
+            
+            const product = products.find(p => p.id === productId);
+            const existingItem = cart.find(item => item.id === productId);
+            
+            if (existingItem) {
+                existingItem.quantity++;
+            } else {
+                cart.push({
+                    id: product.id,
+                    name: product.name,
+                    price: product.price,
+                    quantity: 1
+                });
+            }
+            
+            saveData();
+            renderCart();
+            updateTotal();
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cart-items');
+            if (cart.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div style="font-size: 32px; margin-bottom: 10px;">🛒</div><div>ยังไม่มีสินค้าในตะกร้า</div></div>';
+                return;
+            }
+            
+            container.innerHTML = cart.map(item => `
+                <div class="cart-item">
+                    <div class="cart-item-info">
+                        <div class="cart-item-name">${item.name}</div>
+                        <div class="cart-item-price">${item.price} ฿/ชิ้น</div>
+                    </div>
+                    <div class="cart-item-qty">
+                        <button class="qty-btn" onclick="decreaseQty(${item.id})">-</button>
+                        <div class="qty-display">${item.quantity}</div>
+                        <button class="qty-btn" onclick="increaseQty(${item.id})">+</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function increaseQty(itemId) {
+            const item = cart.find(i => i.id === itemId);
+            item.quantity++;
+            saveData();
+            renderCart();
+            updateTotal();
+        }
+
+        function decreaseQty(itemId) {
+            const item = cart.find(i => i.id === itemId);
+            item.quantity--;
+            if (item.quantity <= 0) {
+                cart = cart.filter(i => i.id !== itemId);
+            }
+            saveData();
+            renderCart();
+            updateTotal();
+        }
+
+        function updateTotal() {
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            document.getElementById('total-display').textContent = total + ' ฿';
+            calculateChange();
+        }
+
+        function calculateChange() {
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const received = parseFloat(document.getElementById('received-input').value) || 0;
+            const change = received - total;
+            
+            const changeSection = document.getElementById('change-section');
+            const changeDisplay = document.getElementById('change-display');
+            
+            if (received > 0) {
+                changeSection.style.display = 'block';
+                changeDisplay.textContent = change >= 0 ? change + ' ฿' : '(ไม่พอ) ' + change + ' ฿';
+            } else {
+                changeSection.style.display = 'none';
+            }
+        }
+
+        document.getElementById('received-input').addEventListener('input', calculateChange);
+
+        async function completeSale() {
+            if (!storeOpen) {
+                alert('❌ กรุณาเปิดร้านก่อน');
+                return;
+            }
+            
+            if (cart.length === 0) {
+                alert('❌ ยังไม่มีสินค้าในตะกร้า');
+                return;
+            }
+            
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const received = parseFloat(document.getElementById('received-input').value) || 0;
+            
+            if (received < total) {
+                alert('❌ เงินที่รับไม่เพียงพอ');
+                return;
+            }
+            
+            const sale = {
+                timestamp: new Date().toISOString(),
+                items: [...cart],
+                total: total,
+                received: received,
+                change: received - total
+            };
+            
+            dailySales.push(sale);
+            saveData();
+            
+            let message = `🛒 ${storeName}\n━━━━━━━━━━━━━━\n`;
+            sale.items.forEach(item => {
+                message += `${item.name} x${item.quantity} = ${item.price * item.quantity} ฿\n`;
+            });
+            message += `━━━━━━━━━━━━━━\n💰 ยอดรวม: ${sale.total} ฿\n💵 รับเงิน: ${sale.received} ฿\n💸 เงินทอน: ${sale.change} ฿`;
+            
+            await sendNotification(message);
+            
+            cart = [];
+            document.getElementById('received-input').value = '';
+            saveData();
+            renderCart();
+            updateTotal();
+            
+            alert('✅ ขายสำเร็จ!\n💰 ยอดขาย: ' + total + ' ฿\n💵 รับเงิน: ' + received + ' ฿\n💸 เงินทอน: ' + (received - total) + ' ฿');
+        }
+
+        function clearCart() {
+            if (cart.length === 0) return;
+            if (!confirm('🗑️ ต้องการล้างรายการสินค้าทั้งหมดหรือไม่?')) return;
+            
+            cart = [];
+            document.getElementById('received-input').value = '';
+            saveData();
+            renderCart();
+            updateTotal();
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tab + '-page').classList.add('active');
+            
+            if (tab === 'manage') renderManageProducts();
+        }
+
+        function renderManageProducts() {
+            const container = document.getElementById('manage-products-container');
+            if (products.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📦</div><div>ยังไม่มีสินค้า<br>กดปุ่มด้านบนเพื่อเพิ่มสินค้าใหม่</div></div>';
+                return;
+            }
+            
+            container.innerHTML = products.map(p => `
+                <div class="manage-product">
+                    <div class="manage-header">
+                        <div>
+                            <div class="manage-name">${p.name}</div>
+                            <div class="manage-price">${p.price} ฿</div>
+                        </div>
+                        <div class="manage-actions">
+                            <button class="btn btn-primary btn-small" onclick="editProduct(${p.id})">✏️ แก้ไข</button>
+                            <button class="btn btn-danger btn-small" onclick="deleteProduct(${p.id})">🗑️ ลบ</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showAddProductModal() {
+            editingProductId = null;
+            document.getElementById('modal-title').textContent = 'เพิ่มสินค้าใหม่';
+            document.getElementById('product-name-input').value = '';
+            document.getElementById('product-price-input').value = '';
+            document.getElementById('product-modal').classList.add('active');
+        }
+
+        function editProduct(id) {
+            const product = products.find(p => p.id === id);
+            editingProductId = id;
+            document.getElementById('modal-title').textContent = 'แก้ไขสินค้า';
+            document.getElementById('product-name-input').value = product.name;
+            document.getElementById('product-price-input').value = product.price;
+            document.getElementById('product-modal').classList.add('active');
+        }
+
+        function saveProduct() {
+            const name = document.getElementById('product-name-input').value.trim();
+            const price = parseFloat(document.getElementById('product-price-input').value);
+            
+            if (!name || !price || price <= 0) {
+                alert('❌ กรุณากรอกข้อมูลให้ครบถ้วน');
+                return;
+            }
+            
+            if (editingProductId) {
+                const product = products.find(p => p.id === editingProductId);
+                product.name = name;
+                product.price = price;
+            } else {
+                const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
+                products.push({ id: newId, name, price });
+            }
+            
+            saveData();
+            closeModal();
+            renderProducts();
+            renderManageProducts();
+            alert('✅ บันทึกสำเร็จ!');
+        }
+
+        function deleteProduct(id) {
+            if (!confirm('⚠️ ต้องการลบสินค้านี้หรือไม่?')) return;
+            
+            products = products.filter(p => p.id !== id);
+            cart = cart.filter(item => item.id !== id);
+            saveData();
+            renderProducts();
+            renderManageProducts();
+            renderCart();
+            updateTotal();
+        }
+
+        function closeModal() {
+            document.getElementById('product-modal').classList.remove('active');
+        }
+
+        function saveStoreName() {
+            const name = document.getElementById('store-name-input').value.trim();
+            if (!name) {
+                alert('❌ กรุณากรอกชื่อร้าน');
+                return;
+            }
+            storeName = name;
+            document.getElementById('storeName').textContent = storeName;
+            saveData();
+            alert('✅ บันทึกชื่อร้านสำเร็จ!');
+        }
+
+        function selectMethod(method) {
+            notificationMethod = method;
+            
+            document.getElementById('method-webhook').classList.toggle('active', method === 'webhook');
+            document.getElementById('method-line').classList.toggle('active', method === 'line');
+            
+            document.getElementById('webhook-section').style.display = method === 'webhook' ? 'block' : 'none';
+            document.getElementById('line-section').style.display = method === 'line' ? 'block' : 'none';
+            
+            saveData();
+        }
+
+        function saveWebhook() {
+            const url = document.getElementById('webhook-url-input').value.trim();
+            if (!url) {
+                alert('❌ กรุณากรอก Webhook URL');
+                return;
+            }
+            webhookUrl = url;
+            saveData();
+            alert('✅ บันทึก Webhook สำเร็จ!');
+        }
+
+        async function testWebhook() {
+            if (!webhookUrl) {
+                alert('❌ กรุณาบันทึก Webhook URL ก่อน');
+                return;
+            }
+            
+            const message = `🧪 ทดสอบระบบ\n🛒 ${storeName}\n✅ เชื่อมต่อสำเร็จ!`;
+            
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        text: message,
+                        content: message,
+                        message: message
+                    })
+                });
+                
+                if (response.ok) {
+                    alert('✅ ส่งข้อความทดสอบสำเร็จ!');
+                } else {
+                    alert('❌ ส่งข้อความไม่สำเร็จ\nกรุณาตรวจสอบ URL');
+                }
+            } catch (e) {
+                alert('❌ เกิดข้อผิดพลาด: ' + e.message);
+            }
+        }
+
+
+        function saveLineBot() {
+            const token = document.getElementById('line-token-input').value.trim();
+            const target = document.getElementById('line-target-input').value.trim();
+
+
+            
+            if (!token || !target) {
+                alert('❌ กรุณากรอกข้อมูลให้ครบถ้วน');
+                return;
+            }
+            
+            lineAccessToken = token;
+            lineTargetId = target;
+            saveData();
+            alert('✅ บันทึก LINE Bot สำเร็จ!');
+        }
+
+        // async function testLineBot() {
+        //     if (!lineAccessToken || !lineTargetId) {
+        //         alert('❌ กรุณาบันทึก LINE Bot ก่อน');
+        //         return;
+        //     }
+            
+        //     const message = `🧪 ทดสอบระบบ\n🛒 ${storeName}\n✅ เชื่อมต่อสำเร็จ!`;
+            
+        //     try {
+        //         const response = await fetch('https://api.line.me/v2/bot/message/push', {
+        //             method: 'POST',
+        //             headers: {
+        //                 'Content-Type': 'application/json',
+        //                 'Authorization': `Bearer ${lineAccessToken}`
+        //             },
+        //             body: JSON.stringify({
+        //                 to: lineTargetId,
+        //                 messages: [{ type: 'text', text: message }]
+        //             })
+        //         });
+                
+        //         if (response.ok) {
+        //             alert('✅ ส่งข้อความทดสอบสำเร็จ!\nลองเช็คไลน์ดูครับ');
+        //         } else {
+        //             const error = await response.json();
+        //             alert('❌ ส่งข้อความไม่สำเร็จ\n' + (error.message || 'กรุณาตรวจสอบ Token และ ID'));
+        //         }
+        //     } catch (e) {
+        //         alert('❌ เกิดข้อผิดพลาด: ' + e.message);
+        //     }
+        // }
+        async function testLineBot() {
+            if (!lineAccessToken || !lineTargetId) {
+                alert('❌ กรุณาบันทึก LINE Bot ก่อน');
+                return;
+            }
+
+            const message = `🧪 ทดสอบระบบ\n🛒 ${storeName}\n✅ เชื่อมต่อสำเร็จ!`;
+
+            try {
+                const response = await fetch("YOUR_WEB_APP_URL", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        token: lineAccessToken,
+                        target: lineTargetId,
+                        message: message
+                    })
+                });
+
+                alert('✅ ส่งข้อความทดสอบสำเร็จ!');
+
+            } catch (e) {
+                alert('❌ เกิดข้อผิดพลาด: ' + e.message);
+            }
+        }
+
+
+        function resetAllData() {
+            if (!confirm('⚠️ ต้องการลบข้อมูลทั้งหมดหรือไม่?\n(สินค้า, ยอดขาย, การตั้งค่า)')) return;
+            if (!confirm('⚠️⚠️ แน่ใจนะครับ? ไม่สามารถกู้คืนได้!')) return;
+            
+            localStorage.clear();
+            location.reload();
+        }
+
+        loadData();
+        renderProducts();
+        renderCart();
+        updateTotal();
+    </script>
+</body>
+</html>
