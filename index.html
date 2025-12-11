@@ -877,7 +877,7 @@
         // }
         async function sendLineMessage(message) {
             try {
-                await fetch('https://script.google.com/macros/s/AKfycbwMMQPfpELqHjNX_l1yQMD2NmkWIPl6-c2kikgHH_FM3IiIOQxymOrisIIWvw-iL2aJJA/exec', {
+                await fetch('https://script.google.com/macros/s/AKfycbym1__LHkuP-tibVT14R7a8ssdy6mW3dBfcnEMpHb63v1yzLfbE88RFYh-bSBMxzhlUAg/exec', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1265,26 +1265,26 @@
                 alert('❌ กรุณาบันทึก LINE Bot ก่อน');
                 return;
             }
-
+        
             const message = `🧪 ทดสอบระบบ\n🛒 ${storeName}\n✅ เชื่อมต่อสำเร็จ!`;
-
+        
             try {
-                const response = await fetch("https://script.google.com/macros/s/AKfycbwMMQPfpELqHjNX_l1yQMD2NmkWIPl6-c2kikgHH_FM3IiIOQxymOrisIIWvw-iL2aJJA/exec", {
+                const response = await fetch("https://script.google.com/macros/s/AKfycbym1__LHkuP-tibVT14R7a8ssdy6mW3dBfcnEMpHb63v1yzLfbE88RFYh-bSBMxzhlUAg/exec", {
                     method: "POST",
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         token: lineAccessToken,
                         target: lineTargetId,
                         message: message
                     })
                 });
-
+        
                 alert('✅ ส่งข้อความทดสอบสำเร็จ!');
-
+        
             } catch (e) {
                 alert('❌ เกิดข้อผิดพลาด: ' + e.message);
             }
         }
-
 
         function resetAllData() {
             if (!confirm('⚠️ ต้องการลบข้อมูลทั้งหมดหรือไม่?\n(สินค้า, ยอดขาย, การตั้งค่า)')) return;
